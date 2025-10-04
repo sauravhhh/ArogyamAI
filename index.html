@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rural Healthcare AI Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-gradient-white {
+            background: linear-gradient(to bottom, #ffffff, #f9fafb, #f3f4f6);
+        }
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .message-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #6b7280;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+        .language-option {
+            transition: all 0.2s ease;
+        }
+        .language-option:hover {
+            background-color: #f3f4f6;
+            transform: scale(1.03);
+        }
+        .language-option.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .chat-input {
+            transition: all 0.2s ease;
+        }
+        .chat-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-white min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm py-4">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-heartbeat text-blue-600 text-2xl mr-3"></i>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Rural Healthcare AI Bot</h1>
+                        <p class="text-xs md:text-sm text-gray-500">Bringing healthcare to your fingertips</p>
+                    </div>
+                </div>
+                <button id="language-btn" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200">
+                    <i class="fas fa-language mr-1"></i>
+                    <span id="current-language">EN</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-6">
+        <!-- Stats Section -->
+        <div class="bg-white rounded-xl shadow-md p-4 mb-6 fade-in">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <p class="text-2xl font-bold text-blue-600">80%</p>
+                    <p class="text-xs text-gray-600">Healthcare Shortfall</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-green-600">425M</p>
+                    <p class="text-xs text-gray-600">Rural Smartphone Users</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-purple-600">24/7</p>
+                    <p class="text-xs text-gray-600">Healthcare Support</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-yellow-600">12+</p>
+                    <p class="text-xs text-gray-600">Local Languages</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Section -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-800">Health Assistant</h2>
+                <p class="text-sm text-gray-600">Ask me anything about your health concerns</p>
+            </div>
+            <div id="chat-container" class="chat-container p-4 bg-gray-50">
+                <div class="message-bubble bg-blue-100 text-gray-800 rounded-lg p-3 mb-3 self-start slide-in">
+                    <p class="text-sm">नमस्ते! I'm your Rural Healthcare AI Bot. How can I help you today? You can ask me about symptoms, first aid, or find nearby hospitals.</p>
+                </div>
+                <div id="chat-messages"></div>
+            </div>
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" class="chat-input flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your health question...">
+                    <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button class="quick-reply-btn text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors duration-200">Fever symptoms</button>
+                    <button class="quick-reply-btn text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors duration-200">First aid for cuts</button>
+                    <button class="quick-reply-btn text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors duration-200">Find hospital</button>
+                    <button class="quick-reply-btn text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors duration-200">Book consultation</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-4 text-center text-gray-500">
+        <p>Made with ❤️ by Sauravhhh</p>
+    </footer>
+
+    <!-- Language Selection Modal -->
+    <div id="language-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Select Language</h3>
+                <button id="close-language-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button class="language-option selected p-3 border border-gray-300 rounded-lg text-center" data-lang="en">
+                    <span class="font-medium">English</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="hi">
+                    <span class="font-medium">हिन्दी</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="bn">
+                    <span class="font-medium">বাংলা</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="te">
+                    <span class="font-medium">తెలుగు</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="mr">
+                    <span class="font-medium">मराठी</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="ta">
+                    <span class="font-medium">தமிழ்</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="gu">
+                    <span class="font-medium">ગુજરાતી</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="kn">
+                    <span class="font-medium">ಕನ್ನಡ</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="ml">
+                    <span class="font-medium">മലയാളം</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="pa">
+                    <span class="font-medium">ਪੰਜਾਬੀ</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="or">
+                    <span class="font-medium">ଓଡ଼ିଆ</span>
+                </button>
+                <button class="language-option p-3 border border-gray-300 rounded-lg text-center" data-lang="as">
+                    <span class="font-medium">অসমীয়া</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const chatContainer = document.getElementById('chat-container');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const quickReplyBtns = document.querySelectorAll('.quick-reply-btn');
+        const languageBtn = document.getElementById('language-btn');
+        const languageModal = document.getElementById('language-modal');
+        const closeLanguageModal = document.getElementById('close-language-modal');
+        const languageOptions = document.querySelectorAll('.language-option');
+        const currentLanguageSpan = document.getElementById('current-language');
+
+        // API Configuration
+        const API_KEY = '9b413b4ba912446ab2bdaef7fe88784a';
+        const API_URL = 'https://api.aimlapi.com/v1/chat/completions';
+
+        // System prompt for healthcare context
+        const SYSTEM_PROMPT = `You are a Rural Healthcare AI Bot designed to help people in rural India with basic health information and guidance. 
+        Your role is to:
+        1. Provide verified first-aid and basic health guidance
+        2. Suggest when to seek professional medical help
+        3. Provide general health information in simple terms
+        4. Be empathetic and understanding of rural healthcare challenges
+        5. Always remind users that you are not a substitute for professional medical advice
+        6. Keep responses concise and easy to understand
+        7. If asked about specific medications, recommend consulting a healthcare provider
+        
+        Important: Always include a disclaimer that you are not a medical professional and they should consult a doctor for serious conditions.`;
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        quickReplyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const message = btn.textContent;
+                addUserMessage(message);
+                setTimeout(() => {
+                    generateBotResponse(message);
+                }, 500);
+            });
+        });
+
+        languageBtn.addEventListener('click', () => {
+            languageModal.classList.remove('hidden');
+        });
+
+        closeLanguageModal.addEventListener('click', () => {
+            languageModal.classList.add('hidden');
+        });
+
+        languageOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove selected class from all options
+                languageOptions.forEach(opt => opt.classList.remove('selected'));
+                // Add selected class to clicked option
+                option.classList.add('selected');
+                // Update current language display
+                const langCode = option.getAttribute('data-lang');
+                currentLanguageSpan.textContent = langCode.toUpperCase();
+                // Close modal
+                languageModal.classList.add('hidden');
+                // Show notification
+                showNotification(`Language changed to ${option.textContent.trim()}`);
+            });
+        });
+
+        // Functions
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message) {
+                addUserMessage(message);
+                chatInput.value = '';
+                setTimeout(() => {
+                    generateBotResponse(message);
+                }, 500);
+            }
+        }
+
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-bubble bg-blue-600 text-white rounded-lg p-3 mb-3 self-end ml-auto slide-in';
+            messageDiv.innerHTML = `<p class="text-sm">${message}</p>`;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addBotMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-bubble bg-gray-200 text-gray-800 rounded-lg p-3 mb-3 self-start slide-in';
+            messageDiv.innerHTML = `<p class="text-sm">${message}</p>`;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'message-bubble bg-gray-200 text-gray-800 rounded-lg p-3 mb-3 self-start';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        async function generateBotResponse(userMessage) {
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: SYSTEM_PROMPT },
+                            { role: 'user', content: userMessage }
+                        ],
+                        max_tokens: 300,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const botResponse = data.choices[0].message.content.trim();
+                
+                removeTypingIndicator();
+                addBotMessage(botResponse);
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                addBotMessage('I apologize, but I\'m having trouble connecting right now. Please try again later. If you have a medical emergency, please seek immediate medical attention.');
+            }
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-transform duration-300 translate-y-20';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-y-20');
+            }, 10);
+            
+            // Animate out and remove
+            setTimeout(() => {
+                notification.classList.add('translate-y-20');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Focus on chat input
+            chatInput.focus();
+        });
+    </script>
+</body>
+</html>
