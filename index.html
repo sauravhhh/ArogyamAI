@@ -223,21 +223,11 @@
         const currentLanguageSpan = document.getElementById('current-language');
 
         // API Configuration
-        const API_KEY = 'RPm1st9VQZg0SYQtgRIpreZGP8NzTtZIgP8OWwwzCeQw6whqDDkd+cDfUuCt1NiIxYjHKejsAuqkWLBQVFnyviZBISUdGGBg4Cq4KMVR7k4zNI7NWRhlXI+OHXm3Op87MImNTKmdTg==';
-        const API_URL = 'https://api.llm7.io/v1/chat/completions';
+        // The API key is kept server-side only (in the /api/chat function) and never appears in this file.
+        const API_URL = '/api/chat';
 
-        // System prompt for healthcare context
-        const SYSTEM_PROMPT = `You are a Rural Healthcare AI Bot designed to help people in rural India with basic health information and guidance. 
-        Your role is to:
-        1. Provide verified first-aid and basic health guidance
-        2. Suggest when to seek professional medical help
-        3. Provide general health information in simple terms
-        4. Be empathetic and understanding of rural healthcare challenges
-        5. Always remind users that you are not a substitute for professional medical advice
-        6. Keep responses concise and easy to understand
-        7. If asked about specific medications, recommend consulting a healthcare provider
-        
-        Important: Always include a disclaimer that you are not a medical professional and they should consult a doctor for serious conditions.`;
+        // Note: the system prompt now lives server-side in /api/chat.js so the
+        // backend controls the assistant's behaviour and no key is exposed here.
 
         // Event listeners
         sendBtn.addEventListener('click', sendMessage);
@@ -338,18 +328,9 @@
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [
-                            { role: 'system', content: SYSTEM_PROMPT },
-                            { role: 'user', content: userMessage }
-                        ],
-                        max_tokens: 300,
-                        temperature: 0.7
-                    })
+                    body: JSON.stringify({ message: userMessage })
                 });
 
                 if (!response.ok) {
@@ -357,7 +338,8 @@
                 }
 
                 const data = await response.json();
-                const botResponse = data.choices[0].message.content.trim();
+                const botResponse = (data.reply || '').trim();
+                if (!botResponse) throw new Error('Empty reply');
                 
                 removeTypingIndicator();
                 addBotMessage(botResponse);
